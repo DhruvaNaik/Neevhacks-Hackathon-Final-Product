@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- Correct Bootstrap CSS link -->
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.1/css/all.css">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='dashboard.css') }}">
+    <link rel="stylesheet" href="../static/dashboard.css">
+    <title>QuantaMail</title>
+</head>
+
+<body>
+    <div class="container py-5">
+        <div class="row">
+            <div class="mx-auto w-100">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="bg-white shadow-sm pt-4 pl-2 pr-2 pb-2">
+                            <ul role="tablist" class="nav bg-light nav-pills rounded nav-fill mb-3">
+                                <li class="nav-item">
+                                    <a data-toggle="pill" href="#compose" class="nav-link active">
+                                        <i class="fas fa-credit-card mr-2"></i> Compose Mail
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a data-toggle="pill" href="#inbox" class="nav-link">
+                                        <i class="fas fa-mobile-alt mr-2"></i> Inbox
+                                    </a>
+                                </li>
+                            </ul>
+                        </div> <!-- End -->
+                        <div class="tab-content">
+                            <div id="compose" class="tab-pane fade show active pt-3">
+                                <form role="form" action="/send_mail" method="POST">
+                                    <div class="form-group">
+                                        <label for="username">
+                                            <h6>To:</h6>
+                                        </label>
+                                        <input type="text" id="to" name="to" placeholder="Recipient Email ID" required
+                                            class="form-control">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="cardNumber">
+                                            <h6>Subject:</h6>
+                                        </label>
+                                        <div class="input-group">
+                                            <input type="text" id="subject" name="subject" placeholder="Subject of the mail"
+                                                class="form-control" required>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="cardNumber">
+                                            <h6>Body:</h6>
+                                        </label>
+                                        <div class="input-group">
+                                            <textarea type="text" id="body" name="body" placeholder="Body of the mail"
+                                                class="form-control" required></textarea>
+                                        </div>
+                                    </div>
+                                    <div class="card-footer">
+                                        <button type="submit"
+                                            class="subscribe btn btn-primary btn-block shadow-sm">Encrypt and
+                                            Send</button>
+                                    </div>
+                                </form>
+                            </div>
+                            <!-- Paypal info -->
+                            <div id="inbox" class="tab-pane fade pt-3">
+                                <!-- <button id="update-inbox" class="btn btn-primary mb-3">Update Inbox</button>
+                                <ul id="messages-list"></ul> -->
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th scope="col">From</th>
+                                            <th scope="col">Subject</th>
+                                            <th scope="col">Date</th>
+                                            <th scope="col">Body</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for message in messages_list %}
+                                        <tr>
+                                            <td>{{ message.from }}</td>
+                                            <td>{{ message.subject }}</td>
+                                            <td>{{ message.date }}</td>
+                                            <td>{{ message.body }}</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Correct Order of JS Scripts -->
+    <script src="https://code.jquery.com/jquery-3.2.1.min.js" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
+        crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" crossorigin="anonymous"></script>
+
+    <script>
+        $(function () {
+            $('[data-toggle="tooltip"]').tooltip()
+        })
+    </script>
+</body>
+
+</html>
