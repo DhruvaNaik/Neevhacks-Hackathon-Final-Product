@@ -1,13 +1,8 @@
-from flask import Flask, render_template, request, redirect, url_for, jsonify, session
-from algorithm import encrypt_text, decrypt_text
-from main import main
-import ast
-from smtp import send_email
-import random
+from flask import Flask, render_template, request, redirect, url_for, session
 import mysql.connector
+import random
+import re
 
-
-# Initialize Flask app with the correct template folder
 app = Flask(__name__, template_folder="./templates", static_folder="./static")
 app.secret_key = 'your_secret_key'  # Required to use sessions
 
@@ -24,55 +19,13 @@ def get_db_connection():
     connection = mysql.connector.connect(**db_config)
     return connection
 
-# Route for the login page
-@app.route('/')
-def index():
-    return render_template('login.html')
-
-# Route for the signup page
-@app.route('/signup')
+# Route for the signup page (GET request to render the form)
+@app.route('/signup', methods=['GET'])
 def signup_page():
     return render_template('signup.html')
 
-# Route to fetch updated messages
-@app.route('/fetch_messages')
-def fetch_messages():
-    final_messages_list = []
-    messages_list = main() 
-    for i in messages_list:
-        if i['from'] == 'quantaamail@gmail.com':
-            i['subject'] = decrypt_text(ast.literal_eval(i['subject']))
-            i['snippet'] = decrypt_text(ast.literal_eval(i['snippet']))
-            final_messages_list.append(i)
-    return jsonify(final_messages_list)
-
-# Route for the dashboard page
-@app.route('/dashboard')
-def dashboard():
-    final_messages_list = []
-    messages_list = main() 
-    try:
-        for i in messages_list:
-            if i['from'] == 'quantaamail@gmail.com':
-                decrypt_text_body = ast.literal_eval(i['body'])
-                print('Body before:', i['body'])
-                i['body'] = decrypt_text(decrypt_text_body)
-                print('Body after:', i['body'])
-                final_messages_list.append(i)
-    except:
-        print('no mails found from quantamail')
-    print(final_messages_list)
-
-    return render_template('dashboard.html', messages_list=final_messages_list)
-
-@app.route('/dashboard.html')
-def dashboard_template():
-    return render_template('dashboard.html')
-
-
-# Route to handle signup form submission
+# Route to handle signup form submission and insert data into the database (POST request)
 @app.route('/signup', methods=['POST'])
-
 def signup():
     try:
         # Extract form data
@@ -109,14 +62,20 @@ def signup():
     
     return redirect(url_for('index'))
 
+# Route for the home page (login page in this context)
+@app.route('/')
+def index():
+    return render_template('login.html')
 
 
+
+# Route to handle login form submission and verify user credentials
 @app.route('/login', methods=['POST'])
 def login():
     gmail_id = request.form.get('userName')
     password = request.form.get('password')
     
-    
+    # Establish database connection
     connection = get_db_connection()
     cursor = connection.cursor(dictionary=True)
     
@@ -128,32 +87,34 @@ def login():
     connection.close()
     
     if user:
-        
+        # Store user info in session
         session['user_id'] = user['id']
         session['fname'] = user['first_name']
         session['lname'] = user['last_name']
         return redirect(url_for('dashboard'))
     else:
-        
+        # Invalid credentials, redirect to login with error
         return render_template('login.html', error='Invalid email or password.')
 
-@app.route('/send_mail', methods=['POST'])
-def send_mail():
-    to = request.form.get('to')
-    subject = request.form.get('subject')
-    body = request.form.get('body')
-    global body_encrypt
-    body_encrypt = encrypt_text(body)
-    print("body encrypt: ", str(body_encrypt))
-    
-    #SMTP sending mail
-    send_email(to,subject,str(body_encrypt))
-    return render_template('dashboard.html')
+# Route for the dashboard page (only accessible after login)
+@app.route('/dashboard')
+def dashboard():
+    if 'user_id' in session:
+        fname = session['fname']
+        lname = session['lname']
+        return f'Welcome to your dashboard, {fname} {lname}!'
+    else:
+        return redirect(url_for('index'))
+
+# Route to handle user logout
+@app.route('/logout')
+def logout():
+    session.clear()  # Clear the session data
+    return redirect(url_for('index'))
 
 
+
+
+# Run the app
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=8080)
-    
-    
-    
-
+    app.run(debug=True)
